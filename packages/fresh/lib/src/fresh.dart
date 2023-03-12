@@ -99,6 +99,8 @@ mixin FreshMixin<T> {
       StreamController<AuthenticationStatus>.broadcast()
         ..add(AuthenticationStatus.initial);
 
+  AuthenticationStatus _lastAuthenticationStatus = AuthenticationStatus.initial;
+
   /// Setter for the [TokenStorage] instance.
   set tokenStorage(TokenStorage<T> tokenStorage) {
     _tokenStorage = tokenStorage..read().then(_updateStatus);
@@ -138,7 +140,10 @@ mixin FreshMixin<T> {
     await _tokenStorage.delete();
     if (_authenticationStatus != AuthenticationStatus.unauthenticated) {
       _authenticationStatus = AuthenticationStatus.unauthenticated;
-      _controller.add(_authenticationStatus);
+      if (_lastAuthenticationStatus != _authenticationStatus) {
+        _controller.add(_authenticationStatus);
+        _lastAuthenticationStatus = _authenticationStatus;
+      }
     }
   }
 
@@ -167,6 +172,9 @@ mixin FreshMixin<T> {
         ? AuthenticationStatus.authenticated
         : AuthenticationStatus.unauthenticated;
     _token = token;
-    _controller.add(_authenticationStatus);
+    if (_lastAuthenticationStatus != _authenticationStatus) {
+      _controller.add(_authenticationStatus);
+      _lastAuthenticationStatus = _authenticationStatus;
+    }
   }
 }
